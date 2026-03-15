@@ -1,0 +1,831 @@
+<!DOCTYPE html>
+<html lang="fr" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Ma page personnelle</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
+
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:        #eef1f8;
+      --surface:   #ffffff;
+      --border:    rgba(0,0,0,0.07);
+      --accent:    #4a6ef5;
+      --text:      #1a1d2e;
+      --muted:     rgba(26,29,46,0.45);
+      --shadow:    0 2px 16px rgba(74,110,245,0.08), 0 1px 4px rgba(0,0,0,0.06);
+      --shadow-lg: 0 8px 32px rgba(74,110,245,0.12), 0 2px 8px rgba(0,0,0,0.08);
+    }
+
+    html.dark {
+      --bg:        #0b0e1a;
+      --surface:   rgba(255,255,255,0.05);
+      --border:    rgba(255,255,255,0.09);
+      --accent:    #6c8fff;
+      --text:      #e8eaf6;
+      --muted:     rgba(232,234,246,0.45);
+      --shadow:    0 2px 16px rgba(0,0,0,0.4), 0 1px 4px rgba(0,0,0,0.3);
+      --shadow-lg: 0 8px 32px rgba(0,0,0,0.5), 0 2px 8px rgba(0,0,0,0.3);
+    }
+    html.dark body::before  { background: radial-gradient(circle, #4f6fff, transparent 70%); }
+    html.dark body::after   { background: radial-gradient(circle, #a855f7, transparent 70%); }
+    html.dark .card-clock   { background: linear-gradient(135deg, rgba(108,143,255,.12), rgba(167,139,250,.08)); border-color: rgba(108,143,255,.22); }
+    html.dark .sel-dropdown { background: #141828; }
+
+    /* ── Recherche : fond TOUJOURS blanc ── */
+    .card-search {
+      background: #ffffff !important;
+      border-color: rgba(74,110,245,0.2) !important;
+      box-shadow: 0 2px 14px rgba(0,0,0,0.10) !important;
+    }
+    .card-search:hover { box-shadow: 0 2px 18px rgba(74,110,245,0.18) !important; transform: none !important; }
+    .search-input { color: #333 !important; background: transparent; }
+    .search-input::placeholder { color: #aaa !important; font-weight: 400; }
+    .search-input:focus { color: #000 !important; }
+    .search-submit { color: #888; }
+    .search-submit:hover { background: rgba(74,110,245,0.08); color: #4a6ef5; }
+
+    /* ── Bouton bascule ── */
+    .card-clock { position: relative; }
+    .theme-toggle {
+      position: absolute; top: 10px; right: 14px;
+      background: rgba(255,255,255,0.12); border: 1px solid rgba(255,255,255,0.18);
+      border-radius: 99px; padding: 4px 11px; cursor: pointer;
+      font-size: .75rem; font-family: inherit; font-weight: 600; color: var(--text);
+      transition: background .2s, border-color .2s;
+      display: flex; align-items: center; gap: 5px; z-index: 10;
+    }
+    .theme-toggle:hover { background: rgba(255,255,255,0.22); border-color: rgba(255,255,255,0.35); }
+    html.dark .theme-toggle { background: rgba(255,255,255,0.08); border-color: rgba(255,255,255,0.14); }
+
+    html, body { height: 100%; }
+
+    body {
+      background: var(--bg);
+      font-family: 'DM Sans', sans-serif;
+      color: var(--text);
+      display: flex; align-items: center; justify-content: center;
+      min-height: 100vh; min-height: 100dvh;
+      overflow-y: auto;
+      position: relative;
+      transition: background 0.3s ease, color 0.3s ease;
+      padding: 12px 0;
+    }
+
+    body::before, body::after {
+      content: ''; position: fixed; border-radius: 50%;
+      filter: blur(80px); opacity: 0.18; pointer-events: none;
+      animation: drift 16s ease-in-out infinite alternate; z-index: 0;
+    }
+    body::before { width: 500px; height: 500px; background: radial-gradient(circle, #6a8fff, transparent 70%); top: -140px; left: -100px; }
+    body::after  { width: 380px; height: 380px; background: radial-gradient(circle, #a78bfa, transparent 70%); bottom: -80px; right: -80px; animation-delay: -8s; }
+    @keyframes drift { to { transform: translate(40px, 30px) scale(1.08); } }
+
+    /* ── Dashboard : flex colonne, pas de hauteur fixe qui coupe ── */
+    .dashboard {
+      position: relative; z-index: 1;
+      display: flex; flex-direction: column; gap: 7px;
+      width: min(96vw, 900px);
+    }
+
+    .card {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 18px; box-shadow: var(--shadow);
+      flex-shrink: 0; transition: transform .22s ease, box-shadow .22s ease;
+    }
+    .card:hover { transform: translateY(-2px); box-shadow: var(--shadow-lg); }
+
+    /* ── Raccourcis avec logo favicon ── */
+    .nav-google {
+      padding: 8px 16px; display: flex; align-items: center;
+      justify-content: center; gap: 6px; flex-wrap: wrap;
+    }
+
+    .btn-shortcut {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 5px 13px 5px 8px; border-radius: 99px; font-family: inherit;
+      font-size: .72rem; font-weight: 600; letter-spacing: .3px;
+      text-decoration: none; color: var(--text); border: 1px solid var(--border);
+      background: rgba(74,110,245,0.04); white-space: nowrap; flex-shrink: 0;
+      transition: background .18s, border-color .18s, transform .18s, box-shadow .18s, color .18s;
+    }
+    .btn-shortcut:hover {
+      background: rgba(74,110,245,0.1); border-color: rgba(74,110,245,0.35);
+      color: var(--accent); transform: translateY(-2px) scale(1.04);
+      box-shadow: 0 4px 14px rgba(74,110,245,0.18);
+    }
+    /* Logo SVG inline */
+    .btn-shortcut .fav {
+      width: 18px; height: 18px; flex-shrink: 0;
+      display: inline-block; vertical-align: middle;
+      border-radius: 3px; overflow: hidden;
+    }
+
+    /* ── Horloge ── */
+    .card-clock {
+      text-align: center; padding: 12px 32px 10px;
+      background: linear-gradient(135deg, rgba(74,110,245,0.06), rgba(167,139,250,0.04));
+      border-color: rgba(74,110,245,0.14);
+    }
+    #clock { font-size: clamp(2.2rem, 7vw, 3.4rem); font-weight: 700; letter-spacing: -2px; line-height: 1; color: var(--text); }
+    #seconds { font-size: 1.2rem; font-weight: 400; color: var(--muted); margin-left: 3px; vertical-align: baseline; }
+    #date-label { margin-top: 5px; font-size: 1.35rem; font-weight: 600; color: var(--text); line-height: 1.1; }
+    #fete-inline { margin-top: 3px; font-size: .78rem; color: var(--muted); font-style: italic; }
+
+    /* ── Recherche ── */
+    .search-wrapper { display: flex; justify-content: center; }
+    .card-search { width: 72%; padding: 9px 18px; border-radius: 99px; }
+    .search-form { display: flex; align-items: center; gap: 10px; }
+    .search-input {
+      flex: 1; border: none; outline: none; font-family: inherit;
+      font-size: 1rem; font-weight: 600; text-align: center;
+    }
+    .search-input:focus { text-align: left; font-weight: 700; }
+    .search-input:focus::placeholder { opacity: 0; }
+    .search-submit {
+      flex-shrink: 0; background: none; border: none; cursor: pointer;
+      padding: 3px 5px; display: flex; align-items: center;
+      border-radius: 50%; transition: background .18s, color .18s;
+    }
+
+    /* ── Raccourcis (lignes sous la recherche) ── */
+    .card-shortcuts {
+      padding: 8px 16px; display: flex; align-items: center;
+      justify-content: center; gap: 6px; flex-wrap: wrap;
+    }
+
+    /* ── Météo ── */
+    .card-weather { padding: 14px 24px 16px; text-align: center; }
+    .weather-header { display: flex; align-items: center; justify-content: center; gap: 10px; margin-bottom: 14px; }
+
+    .selector { position: relative; }
+    .sel-btn {
+      display: flex; align-items: center; gap: 5px;
+      background: rgba(74,110,245,0.05); border: 1px solid rgba(74,110,245,0.18);
+      border-radius: 99px; padding: 5px 11px 5px 10px; cursor: pointer;
+      color: var(--text); font-family: inherit; font-size: .76rem; font-weight: 500;
+      white-space: nowrap; transition: background .18s, border-color .18s;
+    }
+    .sel-btn:hover { background: rgba(74,110,245,0.1); border-color: rgba(74,110,245,0.35); }
+    .sel-btn .chevron { font-size: .5rem; opacity: .5; transition: transform .2s; }
+    .selector.open .chevron { transform: rotate(180deg); }
+
+    .sel-dropdown {
+      display: none; position: absolute; top: calc(100% + 7px); left: 0;
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 16px; box-shadow: var(--shadow-lg); z-index: 200; overflow: hidden;
+    }
+    .selector.open .sel-dropdown { display: block; }
+
+    .city-dropdown { min-width: 215px; max-height: 280px; overflow-y: auto; scrollbar-width: thin; scrollbar-color: var(--border) transparent; }
+    .dd-group { font-size: .58rem; text-transform: uppercase; letter-spacing: 1.4px; color: var(--muted); padding: 9px 14px 3px; font-weight: 700; }
+    .city-opt { display: flex; align-items: center; gap: 9px; padding: 7px 14px; cursor: pointer; font-size: .82rem; transition: background .14s; }
+    .city-opt:hover { background: rgba(74,110,245,0.07); }
+    .city-opt.active { background: rgba(74,110,245,0.1); color: var(--accent); font-weight: 600; }
+    .city-opt .city-sub { font-size: .65rem; color: var(--muted); margin-left: auto; }
+
+    .view-dropdown { min-width: 170px; }
+    .view-opt { display: flex; align-items: center; gap: 8px; padding: 9px 16px; cursor: pointer; font-size: .82rem; white-space: nowrap; transition: background .14s; }
+    .view-opt:hover { background: rgba(74,110,245,0.07); }
+    .view-opt.active { background: rgba(74,110,245,0.1); color: var(--accent); font-weight: 600; }
+
+    .today-main { display: flex; align-items: center; justify-content: center; gap: 14px; margin-bottom: 12px; }
+    .today-icon { font-size: 2.8rem; flex-shrink: 0; filter: drop-shadow(0 2px 8px rgba(0,0,0,.1)); }
+    .today-temps { text-align: left; }
+    .temp-range { display: flex; align-items: baseline; gap: 5px; line-height: 1; }
+    .t-min  { font-size: 1.4rem; font-weight: 400; color: #3b82f6; }
+    .t-sep  { font-size: 1.2rem; color: var(--muted); font-weight: 300; }
+    .t-max  { font-size: 2.1rem; font-weight: 700; color: #f59e0b; }
+    .t-unit { font-size: .9rem; font-weight: 300; color: var(--muted); }
+    .today-cond { font-size: .88rem; font-weight: 500; margin-top: 5px; color: var(--muted); }
+
+    .stat-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 7px; }
+    .stat-box { background: rgba(74,110,245,0.04); border: 1px solid var(--border); border-radius: 12px; padding: 8px 6px 7px; text-align: center; }
+    .stat-ico { font-size: 1rem; }
+    .stat-val { font-size: .95rem; font-weight: 600; margin-top: 2px; }
+    .stat-lbl { font-size: .58rem; text-transform: uppercase; letter-spacing: 1px; color: var(--muted); margin-top: 2px; }
+    .rain-track { margin-top: 4px; height: 3px; background: var(--border); border-radius: 99px; overflow: hidden; }
+    .rain-fill  { height: 100%; background: linear-gradient(90deg, var(--accent), #a78bfa); border-radius: 99px; transition: width 1s ease; }
+
+    .forecast-strip { display: flex; gap: 7px; justify-content: center; }
+    .fc-card { flex: 1; background: rgba(74,110,245,0.04); border: 1px solid var(--border); border-radius: 12px; padding: 8px 4px; text-align: center; min-width: 0; transition: background .18s; }
+    .fc-card:hover { background: rgba(74,110,245,0.09); }
+    .fc-label    { font-size: .7rem; font-weight: 700; color: var(--text); display: block; }
+    .fc-date-sm  { font-size: .6rem; color: var(--muted); display: block; margin-top: 1px; }
+    .fc-emoji    { font-size: 1.5rem; margin: 4px 0; display: block; }
+    .fc-tmax     { font-size: .95rem; font-weight: 700; color: #f59e0b; display: block; }
+    .fc-tmin     { font-size: .75rem; font-weight: 400; color: #3b82f6; display: block; }
+
+    /* ── Badge ── */
+    .badge-row { text-align: center; padding: 4px 0; }
+    .badge-status {
+      display: inline-block; font-size: .72rem; font-weight: 500; color: var(--accent);
+      background: rgba(74,110,245,0.09); border: 1px solid rgba(74,110,245,0.2);
+      border-radius: 99px; padding: 4px 13px;
+    }
+
+    /* ── Footer — toujours visible ── */
+    .footer-line {
+      text-align: center; font-size: .78rem; color: var(--muted);
+      letter-spacing: .2px; padding: 6px 0 4px; line-height: 1.7;
+    }
+    .footer-line a { color: var(--accent); text-decoration: none; transition: opacity .18s; }
+    .footer-line a:hover { opacity: .7; }
+
+    /* ── Spinner ── */
+    .spinner {
+      display: inline-block; width: 10px; height: 10px;
+      border: 2px solid rgba(74,110,245,.25); border-top-color: var(--accent);
+      border-radius: 50%; animation: spin .7s linear infinite;
+      vertical-align: middle; margin-right: 4px;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ── Responsive tablette (≤ 720px) ── */
+    @media (max-width: 720px) {
+      .dashboard { width: 100%; gap: 5px; }
+      .card-search { width: 88%; }
+      #clock { font-size: clamp(1.6rem, 9vw, 2.6rem); }
+      #date-label { font-size: 1rem; }
+    }
+
+    /* ── Responsive smartphone (≤ 480px) ── */
+    @media (max-width: 480px) {
+      body { padding: 8px 0 16px; }
+      .dashboard { gap: 5px; }
+
+      .card-clock { padding: 8px 12px 6px; }
+      #clock { font-size: clamp(1.4rem, 10vw, 2rem); letter-spacing: -1px; }
+      #seconds { font-size: .85rem; }
+      #date-label { font-size: .82rem; margin-top: 2px; }
+      #fete-inline { font-size: .65rem; margin-top: 1px; }
+      .theme-toggle { top: 7px; right: 8px; padding: 3px 8px; font-size: .68rem; }
+
+      .nav-google { padding: 5px 8px; gap: 4px; }
+      .card-shortcuts { padding: 5px 8px; gap: 4px; }
+      .btn-shortcut { font-size: .62rem; padding: 4px 9px 4px 6px; gap: 5px; }
+      .btn-shortcut .fav { width: 14px; height: 14px; }
+
+      .card-search { width: 92%; padding: 6px 12px; }
+      .search-input { font-size: .88rem; }
+
+      .card-weather { padding: 8px 12px 10px; }
+      .weather-header { margin-bottom: 8px; }
+      .sel-btn { font-size: .68rem; padding: 3px 8px; }
+      .today-icon { font-size: 2rem; }
+      .t-max { font-size: 1.6rem; }
+      .t-min { font-size: 1.1rem; }
+      .today-cond { font-size: .75rem; margin-top: 3px; }
+      .today-main { gap: 10px; margin-bottom: 8px; }
+      .stat-box { padding: 5px 4px; border-radius: 10px; }
+      .stat-ico { font-size: .82rem; }
+      .stat-val { font-size: .8rem; }
+      .stat-lbl { font-size: .5rem; }
+      .stat-grid { gap: 5px; }
+      .forecast-strip { gap: 4px; }
+      .fc-card { padding: 5px 2px; border-radius: 10px; }
+      .fc-label { font-size: .58rem; }
+      .fc-emoji { font-size: 1.1rem; margin: 2px 0; }
+      .fc-tmax { font-size: .78rem; }
+      .fc-tmin { font-size: .65rem; }
+      .footer-line { font-size: .7rem; padding: 4px 8px; }
+    }
+
+    @media (max-width: 360px) {
+      .btn-shortcut { font-size: .58rem; padding: 3px 7px 3px 5px; }
+      .btn-shortcut .fav { width: 13px; height: 13px; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="dashboard">
+
+  <!-- Horloge -->
+  <div class="card card-clock">
+    <button class="theme-toggle" id="themeToggle" onclick="toggleTheme()" aria-label="Changer le thème">
+      <span id="themeIcon">☀️</span>
+      <span id="themeLabel">Clair</span>
+    </button>
+    <div id="clock">
+      <span id="h">--</span><span>:</span><span id="m">--</span><span id="seconds">00</span>
+    </div>
+    <div id="date-label">chargement…</div>
+    <div id="fete-inline">🌸 Bonne fête aux : <span id="fete-name">…</span></div>
+  </div>
+
+  <!-- Nav Google — SVG logos inline (aucune requête externe) -->
+  <div class="card nav-google">
+
+    <!-- Gmail -->
+    <a href="https://mail.google.com/mail/u/4/#inbox" target="_blank" rel="noopener" class="btn-shortcut">
+      <svg class="fav" viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg">
+        <rect width="32" height="32" rx="4" fill="#fff"/>
+        <path d="M5 10.5A1.5 1.5 0 016.5 9h19A1.5 1.5 0 0127 10.5v11A1.5 1.5 0 0125.5 23h-19A1.5 1.5 0 015 21.5z" fill="#fff" stroke="#e0e0e0" stroke-width=".5"/>
+        <path d="M5 11l11 7.5L27 11" fill="none" stroke="#EA4335" stroke-width="1.5"/>
+        <path d="M5 11v10.5A1.5 1.5 0 006.5 23H8V14.5L16 20l8-5.5V23h1.5A1.5 1.5 0 0027 21.5V11l-11 7.5z" fill="#fff"/>
+        <path d="M5 11l11 7.5L27 11" fill="none" stroke="#EA4335" stroke-width="1.8" stroke-linecap="round"/>
+      </svg>
+      Gmail
+    </a>
+
+    <!-- Google Images -->
+    <a href="https://www.google.com/imghp?hl=fr" target="_blank" rel="noopener" class="btn-shortcut">
+      <svg class="fav" viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg">
+        <rect width="32" height="32" rx="4" fill="#fff"/>
+        <text x="16" y="23" font-size="20" text-anchor="middle" font-family="sans-serif">🖼️</text>
+      </svg>
+      Images
+    </a>
+
+    <!-- YouTube -->
+    <a href="https://www.youtube.com/" target="_blank" rel="noopener" class="btn-shortcut">
+      <svg class="fav" viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg">
+        <rect width="32" height="32" rx="4" fill="#FF0000"/>
+        <path d="M26.5 11.5s-.3-1.8-1.1-2.6c-1.1-1.1-2.3-1.1-2.8-1.2C19.8 7.5 16 7.5 16 7.5s-3.8 0-6.6.2c-.5.1-1.7.1-2.8 1.2-.8.8-1.1 2.6-1.1 2.6S5.2 13.5 5.2 15.5v1.9c0 2 .3 3.9.3 3.9s.3 1.8 1.1 2.6c1.1 1.1 2.5 1.1 3.1 1.2C11.8 25.2 16 25.2 16 25.2s3.8 0 6.6-.2c.5-.1 1.7-.1 2.8-1.2.8-.8 1.1-2.6 1.1-2.6s.3-2 .3-3.9v-1.9c0-2-.3-3.9-.3-3.9z" fill="#FF0000" stroke="#cc0000" stroke-width=".3"/>
+        <polygon points="13.5,12.5 13.5,20.5 20.5,16.5" fill="#fff"/>
+      </svg>
+      YouTube
+    </a>
+
+    <!-- Google Drive -->
+    <a href="https://drive.google.com/drive/u/0/" target="_blank" rel="noopener" class="btn-shortcut">
+      <svg class="fav" viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg">
+        <rect width="32" height="32" rx="4" fill="#fff"/>
+        <path d="M16 6l8.5 14H7.5z" fill="#0FA958"/>
+        <path d="M7.5 20L3 27h10.5L17 20z" fill="#4285F4"/>
+        <path d="M24.5 20L29 27H18.5L15 20z" fill="#FBBC04"/>
+        <path d="M16 6l5 8.5H11z" fill="#34A853" opacity=".6"/>
+      </svg>
+      Drive
+    </a>
+
+    <!-- Google Maps -->
+    <a href="https://www.google.com/maps/" target="_blank" rel="noopener" class="btn-shortcut">
+      <svg class="fav" viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg">
+        <rect width="32" height="32" rx="4" fill="#fff"/>
+        <path d="M16 4C11.6 4 8 7.6 8 12c0 6 8 16 8 16s8-10 8-16c0-4.4-3.6-8-8-8z" fill="#EA4335"/>
+        <circle cx="16" cy="12" r="3.5" fill="#fff"/>
+      </svg>
+      Maps
+    </a>
+
+    <!-- DeepL -->
+    <a href="https://www.deepl.com/fr/translator" target="_blank" rel="noopener" class="btn-shortcut">
+      <svg class="fav" viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg">
+        <rect width="32" height="32" rx="4" fill="#0F2B46"/>
+        <path d="M16 5c-6.1 0-11 4.9-11 11s4.9 11 11 11 11-4.9 11-11S22.1 5 16 5zm-1.5 16.5v-4H9v-3h5.5v-4l6.5 5.5-6.5 5.5z" fill="#06CFAD"/>
+      </svg>
+      Traduction
+    </a>
+  </div>
+
+  <!-- Recherche Google -->
+  <div class="search-wrapper">
+    <form class="card card-search" action="https://www.google.com/search" method="GET">
+      <div class="search-form">
+        <input class="search-input" type="text" name="q" placeholder="Rechercher sur Google…" autocomplete="off" aria-label="Recherche Google">
+        <button type="submit" class="search-submit" aria-label="Lancer la recherche">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+          </svg>
+        </button>
+      </div>
+    </form>
+  </div>
+
+  <!-- Outils IA et médias -->
+  <div class="card card-shortcuts">
+
+    <!-- Claude -->
+    <a href="https://claude.ai/new" target="_blank" rel="noopener" class="btn-shortcut">
+      <svg class="fav" viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg">
+        <rect width="32" height="32" rx="4" fill="#CC9B7A"/>
+        <path d="M11 21l2.5-7.5L16 8l2.5 5.5L21 21" fill="none" stroke="#1a0a00" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M12.5 17.5h7" fill="none" stroke="#1a0a00" stroke-width="2" stroke-linecap="round"/>
+      </svg>
+      Claude
+    </a>
+
+    <!-- ChatGPT -->
+    <a href="https://chatgpt.com/" target="_blank" rel="noopener" class="btn-shortcut">
+      <svg class="fav" viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg">
+        <rect width="32" height="32" rx="4" fill="#10a37f"/>
+        <path d="M23.5 14.3a5.6 5.6 0 00-.5-4.6 5.8 5.8 0 00-6.2-2.8 5.7 5.7 0 00-4.3-1.9 5.8 5.8 0 00-5.5 4 5.6 5.6 0 00-3.7 2.7 5.8 5.8 0 00.7 6.8 5.6 5.6 0 00.5 4.6 5.8 5.8 0 006.2 2.8 5.7 5.7 0 004.3 1.9 5.8 5.8 0 005.5-4 5.6 5.6 0 003.7-2.7 5.8 5.8 0 00-.7-6.8z" fill="#fff"/>
+        <path d="M16 11v10M11.5 13.5l9 5M11.5 18.5l9-5" fill="none" stroke="#10a37f" stroke-width="1.5" stroke-linecap="round"/>
+      </svg>
+      ChatGPT
+    </a>
+
+    <!-- eBay -->
+    <a href="https://www.ebay.fr/mys/active" target="_blank" rel="noopener" class="btn-shortcut">
+      <svg class="fav" viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg">
+        <rect width="32" height="32" rx="4" fill="#fff"/>
+        <text x="1" y="22" font-size="11" font-family="Arial Black, sans-serif" font-weight="900" letter-spacing="-0.5">
+          <tspan fill="#E53238">e</tspan><tspan fill="#0064D2">B</tspan><tspan fill="#F5AF02">a</tspan><tspan fill="#86B817">y</tspan>
+        </text>
+      </svg>
+      eBay
+    </a>
+
+    <!-- PostImages -->
+    <a href="https://postimages.org/" target="_blank" rel="noopener" class="btn-shortcut">
+      <svg class="fav" viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg">
+        <rect width="32" height="32" rx="4" fill="#2D9CDB"/>
+        <rect x="6" y="9" width="20" height="14" rx="2" fill="none" stroke="#fff" stroke-width="1.5"/>
+        <path d="M6 18l5-4 4 3 4-5 7 6" fill="none" stroke="#fff" stroke-width="1.4" stroke-linejoin="round"/>
+        <circle cx="11" cy="14" r="1.8" fill="#fff"/>
+      </svg>
+      PostImages
+    </a>
+
+    <!-- VirusTotal -->
+    <a href="https://www.virustotal.com/" target="_blank" rel="noopener" class="btn-shortcut">
+      <svg class="fav" viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg">
+        <rect width="32" height="32" rx="4" fill="#394EFF"/>
+        <path d="M16 5L27 11v10L16 27 5 21V11z" fill="none" stroke="#fff" stroke-width="1.6"/>
+        <path d="M11 16l3.5 3.5L21 13" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      VirusTotal
+    </a>
+
+    <!-- MyTools -->
+    <a href="https://mytools.webovore.fr/" target="_blank" rel="noopener" class="btn-shortcut">
+      <svg class="fav" viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg">
+        <rect width="32" height="32" rx="4" fill="#FF6B35"/>
+        <path d="M20 8a4 4 0 00-4 4 4 4 0 000 .5l-8 8 1.5 1.5 8-8A4 4 0 1020 8z" fill="#fff"/>
+        <circle cx="20" cy="12" r="2" fill="#FF6B35"/>
+      </svg>
+      MyTools
+    </a>
+  </div>
+
+  <!-- Hébergement, dépôts et banques d'images -->
+  <div class="card card-shortcuts">
+
+    <!-- Hostinger -->
+    <a href="https://hpanel.hostinger.com/" target="_blank" rel="noopener" class="btn-shortcut">
+      <svg class="fav" viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg">
+        <rect width="32" height="32" rx="4" fill="#673DE6"/>
+        <path d="M9 8h3v7h8V8h3v16h-3v-6H12v6H9z" fill="#fff"/>
+      </svg>
+      Hostinger
+    </a>
+
+    <!-- Mes Sites (same Hostinger logo, different label) -->
+    <a href="https://hpanel.hostinger.com/websites" target="_blank" rel="noopener" class="btn-shortcut">
+      <svg class="fav" viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg">
+        <rect width="32" height="32" rx="4" fill="#673DE6"/>
+        <rect x="7" y="8" width="18" height="12" rx="1.5" fill="none" stroke="#fff" stroke-width="1.5"/>
+        <path d="M11 24h10" stroke="#fff" stroke-width="1.5" stroke-linecap="round"/>
+        <path d="M16 20v4" stroke="#fff" stroke-width="1.5" stroke-linecap="round"/>
+      </svg>
+      Mes Sites
+    </a>
+
+    <!-- Instant Domain Search -->
+    <a href="https://instantdomainsearch.com/" target="_blank" rel="noopener" class="btn-shortcut">
+      <svg class="fav" viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg">
+        <rect width="32" height="32" rx="4" fill="#FF4F00"/>
+        <circle cx="14" cy="14" r="7" fill="none" stroke="#fff" stroke-width="2"/>
+        <path d="M19.5 19.5L26 26" stroke="#fff" stroke-width="2.2" stroke-linecap="round"/>
+        <path d="M11 14h6M14 11v6" stroke="#fff" stroke-width="1.5" stroke-linecap="round"/>
+      </svg>
+      Domaine
+    </a>
+
+    <!-- GitHub -->
+    <a href="https://github.com/KARIMWTF" target="_blank" rel="noopener" class="btn-shortcut">
+      <svg class="fav" viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg">
+        <rect width="32" height="32" rx="4" fill="#24292F"/>
+        <path fill="#fff" d="M16 5.3a11 11 0 00-3.5 21.5c.6.1.8-.2.8-.6v-2c-3.1.7-3.7-1.5-3.7-1.5-.5-1.3-1.2-1.6-1.2-1.6-1-.7.1-.7.1-.7 1.1.1 1.7 1.1 1.7 1.1 1 1.7 2.6 1.2 3.3.9.1-.7.4-1.2.7-1.5-2.5-.3-5.1-1.2-5.1-5.5 0-1.2.4-2.2 1.1-3-.1-.3-.5-1.4.1-2.9 0 0 .9-.3 3 1.1a10.5 10.5 0 015.6 0c2.1-1.4 3-1.1 3-1.1.6 1.5.2 2.6.1 2.9.7.8 1.1 1.8 1.1 3 0 4.3-2.6 5.2-5.1 5.5.4.3.7 1 .7 2v3c0 .3.2.7.8.6A11 11 0 0016 5.3z"/>
+      </svg>
+      GitHub
+    </a>
+
+    <!-- Pixabay -->
+    <a href="https://pixabay.com/fr/" target="_blank" rel="noopener" class="btn-shortcut">
+      <svg class="fav" viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg">
+        <rect width="32" height="32" rx="4" fill="#2EC66E"/>
+        <circle cx="12" cy="13" r="3.5" fill="#fff"/>
+        <path d="M6 24l5-5 4 3 5-6 6 8" fill="#fff"/>
+      </svg>
+      Pixabay
+    </a>
+
+    <!-- Pexels -->
+    <a href="https://www.pexels.com/fr-fr/" target="_blank" rel="noopener" class="btn-shortcut">
+      <svg class="fav" viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg">
+        <rect width="32" height="32" rx="4" fill="#05A081"/>
+        <path d="M11 8h6a5 5 0 010 10h-3v6h-3V8z" fill="#fff"/>
+        <path d="M14 14h3a2 2 0 000-4h-3v4z" fill="#05A081"/>
+      </svg>
+      Pexels
+    </a>
+  </div>
+
+  <!-- Météo -->
+  <div class="card card-weather">
+    <div class="weather-header">
+      <div class="selector" id="citySelector">
+        <button type="button" class="sel-btn" onclick="toggleSelector('citySelector')">
+          <span id="cityFlag">🇫🇷</span>
+          <span id="cityLabel">Le Pellerin</span>
+          <span class="chevron">▼</span>
+        </button>
+        <div class="sel-dropdown city-dropdown" id="cityDropdown"></div>
+      </div>
+      <div class="selector" id="viewSelector">
+        <button type="button" class="sel-btn" onclick="toggleSelector('viewSelector')">
+          <span id="viewLabel">📅 Aujourd'hui</span>
+          <span class="chevron">▼</span>
+        </button>
+        <div class="sel-dropdown view-dropdown" id="viewDropdown">
+          <div class="view-opt active" data-view="today"    onclick="selectView('today')">📅 Aujourd'hui</div>
+          <div class="view-opt"        data-view="forecast" onclick="selectView('forecast')">🗓️ 5 prochains jours</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="today-main">
+      <div class="today-icon" id="w-icon">⏳</div>
+      <div class="today-temps">
+        <div class="temp-range">
+          <span class="t-min" id="w-min">--</span>
+          <span class="t-sep">° /</span>
+          <span class="t-max" id="w-max">--</span>
+          <span class="t-unit">°C</span>
+        </div>
+        <div class="today-cond" id="w-cond">--</div>
+      </div>
+    </div>
+
+    <div class="stat-grid">
+      <div class="stat-box">
+        <div class="stat-ico">💧</div>
+        <div class="stat-val" id="w-hum">--%</div>
+        <div class="stat-lbl">Humidité</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-ico">🌧️</div>
+        <div class="stat-val" id="w-rain">--%</div>
+        <div class="stat-lbl">Pluie</div>
+        <div class="rain-track"><div class="rain-fill" id="rain-bar" style="width:0%"></div></div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-ico">🌡️</div>
+        <div class="stat-val" id="w-feel">--°C</div>
+        <div class="stat-lbl">Ressenti</div>
+      </div>
+    </div>
+
+    <div class="forecast-strip" id="forecastStrip" style="display:none; margin-top:10px;"></div>
+  </div>
+
+  <!-- Badge fraîcheur -->
+  <div class="badge-row">
+    <span class="badge-status" id="w-badge">⏳ Chargement…</span>
+  </div>
+
+  <!-- Footer — toujours affiché -->
+  <div class="footer-line">
+    Copyright 2026 DIGITAL PALM<br>
+    Vous souhaitez une page personnalisée : <a href="https://digitalpalm.fr/contact.html" target="_blank" rel="noopener">Contactez-nous.</a>
+  </div>
+
+</div><!-- /.dashboard -->
+
+<script>
+  /* ── Villes ── */
+  const CITIES = [
+    { group:'🇫🇷 France',      flag:'🇫🇷', name:'Le Pellerin',  sub:'44640',      lat:47.1997, lon:-1.7508,  tz:'Europe/Paris' },
+    { group:'🇫🇷 France',      flag:'🇫🇷', name:'Angers',        sub:'49100',      lat:47.4784, lon:-0.5632,  tz:'Europe/Paris' },
+    { group:'🇫🇷 France',      flag:'🇫🇷', name:'Paris',         sub:'75001',      lat:48.8566, lon:2.3522,   tz:'Europe/Paris' },
+    { group:'🇫🇷 France',      flag:'🇫🇷', name:'Vannes',        sub:'56000',      lat:47.6559, lon:-2.7603,  tz:'Europe/Paris' },
+    { group:'🇫🇷 France',      flag:'🇫🇷', name:'Bordeaux',      sub:'33100',      lat:44.8378, lon:-0.5792,  tz:'Europe/Paris' },
+    { group:'🇧🇪 Belgique',    flag:'🇧🇪', name:'Bruxelles',     sub:'Belgique',   lat:50.8503, lon:4.3517,   tz:'Europe/Brussels' },
+    { group:'🇬🇧 Royaume-Uni', flag:'🇬🇧', name:'Londres',       sub:'Angleterre', lat:51.5074, lon:-0.1278,  tz:'Europe/London' },
+    { group:'🇩🇪 Allemagne',   flag:'🇩🇪', name:'Stuttgart',     sub:'Allemagne',  lat:48.7758, lon:9.1829,   tz:'Europe/Berlin' },
+    { group:'🇩🇪 Allemagne',   flag:'🇩🇪', name:'Munich',        sub:'Allemagne',  lat:48.1351, lon:11.582,   tz:'Europe/Berlin' },
+    { group:'🇨🇭 Suisse',      flag:'🇨🇭', name:'Genève',        sub:'Suisse',     lat:46.2044, lon:6.1432,   tz:'Europe/Zurich' },
+    { group:'🇮🇹 Italie',      flag:'🇮🇹', name:'Milan',         sub:'Italie',     lat:45.4654, lon:9.1859,   tz:'Europe/Rome' },
+    { group:'🇪🇸 Espagne',     flag:'🇪🇸', name:'Barcelone',     sub:'Espagne',    lat:41.3851, lon:2.1734,   tz:'Europe/Madrid' },
+    { group:'🇪🇸 Espagne',     flag:'🇪🇸', name:'Madrid',        sub:'Espagne',    lat:40.4168, lon:-3.7038,  tz:'Europe/Madrid' },
+    { group:'🇪🇸 Espagne',     flag:'🇪🇸', name:'Valence',       sub:'Espagne',    lat:39.4699, lon:-0.3763,  tz:'Europe/Madrid' },
+    { group:'🇲🇦 Maroc',       flag:'🇲🇦', name:'Beni Mellal',   sub:'Maroc',      lat:32.3369, lon:-6.3498,  tz:'Africa/Casablanca' },
+    { group:'🇲🇦 Maroc',       flag:'🇲🇦', name:'Marrakech',     sub:'Maroc',      lat:31.6295, lon:-7.9811,  tz:'Africa/Casablanca' },
+    { group:'🇲🇦 Maroc',       flag:'🇲🇦', name:'Tanger',        sub:'Maroc',      lat:35.7595, lon:-5.834,   tz:'Africa/Casablanca' },
+    { group:'🇲🇦 Maroc',       flag:'🇲🇦', name:'Agadir',        sub:'Maroc',      lat:30.4278, lon:-9.5981,  tz:'Africa/Casablanca' },
+    { group:'🇲🇦 Maroc',       flag:'🇲🇦', name:'Casablanca',    sub:'Maroc',      lat:33.5731, lon:-7.5898,  tz:'Africa/Casablanca' },
+    { group:'🇲🇦 Maroc',       flag:'🇲🇦', name:'Rabat',         sub:'Maroc',      lat:33.9716, lon:-6.8498,  tz:'Africa/Casablanca' },
+  ];
+
+  /* ── WMO ── */
+  const WMO = {
+    0:{i:'☀️',l:'Soleil'},         1:{i:'🌤️',l:'Peu nuageux'},       2:{i:'⛅',l:'Partiellement nuageux'},
+    3:{i:'☁️',l:'Couvert'},        45:{i:'🌫️',l:'Brouillard'},        48:{i:'🌫️',l:'Brouillard givrant'},
+    51:{i:'🌦️',l:'Bruine légère'}, 53:{i:'🌦️',l:'Bruine'},           55:{i:'🌧️',l:'Bruine dense'},
+    61:{i:'🌧️',l:'Pluie légère'},  63:{i:'🌧️',l:'Pluie'},            65:{i:'🌧️',l:'Pluie forte'},
+    71:{i:'🌨️',l:'Neige légère'},  73:{i:'❄️',l:'Neige'},             75:{i:'❄️',l:'Neige forte'},
+    77:{i:'🌨️',l:'Grésil'},        80:{i:'🌦️',l:'Averses légères'},   81:{i:'🌧️',l:'Averses'},
+    82:{i:'⛈️',l:'Averses fortes'},85:{i:'🌨️',l:'Neige en averses'},  86:{i:'❄️',l:'Neige forte'},
+    95:{i:'⛈️',l:'Orage'},         96:{i:'⛈️',l:'Orage + grêle'},     99:{i:'⛈️',l:'Orage violent'},
+  };
+  const wmo = code => WMO[code] ?? { i:'🌡️', l:'Variable' };
+
+  let cityIdx  = 0;
+  let viewMode = 'today';
+  let wxCache  = null;
+
+  /* ── Villes dropdown ── */
+  function buildCityList() {
+    const dd = document.getElementById('cityDropdown');
+    let lastGroup = '';
+    CITIES.forEach((c, i) => {
+      if (c.group !== lastGroup) {
+        lastGroup = c.group;
+        const lbl = document.createElement('div');
+        lbl.className = 'dd-group'; lbl.textContent = c.group;
+        dd.appendChild(lbl);
+      }
+      const opt = document.createElement('div');
+      opt.className = 'city-opt' + (i === 0 ? ' active' : '');
+      opt.dataset.idx = i;
+      opt.innerHTML = `<span>${c.flag}</span><span>${c.name}</span><span class="city-sub">${c.sub}</span>`;
+      opt.addEventListener('click', () => selectCity(i));
+      dd.appendChild(opt);
+    });
+  }
+
+  function toggleSelector(id) {
+    ['citySelector','viewSelector'].forEach(sid => {
+      if (sid !== id) document.getElementById(sid).classList.remove('open');
+    });
+    document.getElementById(id).classList.toggle('open');
+  }
+  document.addEventListener('click', e => {
+    if (!e.target.closest('.selector'))
+      document.querySelectorAll('.selector').forEach(el => el.classList.remove('open'));
+  });
+
+  function selectCity(idx) {
+    cityIdx = idx;
+    const c = CITIES[idx];
+    document.getElementById('cityFlag').textContent  = c.flag;
+    document.getElementById('cityLabel').textContent = c.name;
+    document.querySelectorAll('.city-opt').forEach(el =>
+      el.classList.toggle('active', +el.dataset.idx === idx));
+    document.getElementById('citySelector').classList.remove('open');
+    wxCache = null; fetchWeather();
+  }
+
+  function selectView(view) {
+    viewMode = view;
+    const labels = { today:"📅 Aujourd'hui", forecast:'🗓️ 5 jours' };
+    document.getElementById('viewLabel').textContent = labels[view];
+    document.querySelectorAll('.view-opt').forEach(el =>
+      el.classList.toggle('active', el.dataset.view === view));
+    document.getElementById('viewSelector').classList.remove('open');
+    const statGrid  = document.querySelector('.stat-grid');
+    const todayMain = document.querySelector('.today-main');
+    const strip     = document.getElementById('forecastStrip');
+    if (view === 'forecast') {
+      statGrid.style.display = 'none'; todayMain.style.display = 'none'; strip.style.display = 'flex';
+    } else {
+      statGrid.style.display = ''; todayMain.style.display = ''; strip.style.display = 'none';
+    }
+    renderWeather();
+  }
+
+  /* ── Thème : sombre par défaut ── */
+  function toggleTheme() {
+    const isDark = document.documentElement.classList.toggle('dark');
+    document.getElementById('themeIcon').textContent  = isDark ? '☀️' : '🌙';
+    document.getElementById('themeLabel').textContent = isDark ? 'Clair' : 'Sombre';
+    try { localStorage.setItem('theme', isDark ? 'dark' : 'light'); } catch {}
+  }
+  (function () {
+    try {
+      if (localStorage.getItem('theme') === 'light') {
+        document.documentElement.classList.remove('dark');
+        document.getElementById('themeIcon').textContent  = '🌙';
+        document.getElementById('themeLabel').textContent = 'Sombre';
+      }
+    } catch {}
+  })();
+
+  /* ── Horloge ── */
+  const JOURS = ['Dimanche','Lundi','Mardi','Mercredi','Jeudi','Vendredi','Samedi'];
+  const MOIS  = ['janvier','février','mars','avril','mai','juin','juillet','août','septembre','octobre','novembre','décembre'];
+  function tick() {
+    const now = new Date();
+    document.getElementById('h').textContent       = String(now.getHours()).padStart(2,'0');
+    document.getElementById('m').textContent       = String(now.getMinutes()).padStart(2,'0');
+    document.getElementById('seconds').textContent = String(now.getSeconds()).padStart(2,'0');
+    document.getElementById('date-label').textContent =
+      `${JOURS[now.getDay()]} ${now.getDate()} ${MOIS[now.getMonth()]} ${now.getFullYear()}`;
+  }
+
+  /* ── Fêtes ── */
+  const FETES = {
+    "01-01":"Sainte Marie","01-02":"Saint Basile","01-03":"Sainte Geneviève","01-04":"Saint Odilon","01-05":"Saint Édouard","01-06":"Les Rois Mages","01-07":"Saint Raymond","01-08":"Saint Lucien","01-09":"Sainte Alix","01-10":"Saint Guillaume","01-11":"Saint Paulin","01-12":"Sainte Tatiana","01-13":"Sainte Yvette","01-14":"Sainte Nina","01-15":"Saint Rémi","01-16":"Saint Marcel","01-17":"Saint Antoine","01-18":"Sainte Prisca","01-19":"Saint Marius","01-20":"Saint Sébastien","01-21":"Sainte Agnès","01-22":"Saint Vincent","01-23":"Saint Barnard","01-24":"Saint François de Sales","01-25":"Saint Paul","01-26":"Saints Timothée et Tite","01-27":"Sainte Angèle","01-28":"Saint Thomas d'Aquin","01-29":"Saint Gildas","01-30":"Sainte Martine","01-31":"Saint Jean Bosco",
+    "02-01":"Sainte Ella","02-02":"La Chandeleur","02-03":"Saint Blaise","02-04":"Saint Gilbert","02-05":"Sainte Agathe","02-06":"Sainte Dorothée","02-07":"Saint Eugène","02-08":"Saint Jérôme","02-09":"Sainte Apolline","02-10":"Saint Arnaud","02-11":"Notre-Dame de Lourdes","02-12":"Saint Félix","02-13":"Saint Béning","02-14":"Saint Valentin","02-15":"Sainte Claude","02-16":"Sainte Julienne","02-17":"Saint Alexis","02-18":"Sainte Bernadette","02-19":"Saint Gabin","02-20":"Sainte Aimée","02-21":"Saint Damien","02-22":"Saint Pierre","02-23":"Saint Lazare","02-24":"Saint Modeste","02-25":"Saint Roméo","02-26":"Sainte Isabelle","02-27":"Sainte Honorine","02-28":"Saint Romain","02-29":"Saint Auguste",
+    "03-01":"Saint Aubin","03-02":"Saint Charles le Bon","03-03":"Saint Guénolé","03-04":"Saint Casimir","03-05":"Sainte Olive","03-06":"Sainte Colette","03-07":"Sainte Félicité","03-08":"Saint Jean de Dieu","03-09":"Sainte Françoise","03-10":"Saint Vivien","03-11":"Sainte Rosine","03-12":"Saint Grégoire","03-13":"Saint Rodrigue","03-14":"Sainte Mathilde","03-15":"Sainte Louise","03-16":"Sainte Bénédicte","03-17":"Saint Patrick","03-18":"Saint Cyrille","03-19":"Saint Joseph","03-20":"Saint Herbert","03-21":"Sainte Clémence","03-22":"Sainte Léa","03-23":"Saint Victorien","03-24":"Saint Aldebert","03-25":"Annonciation","03-26":"Sainte Larissa","03-27":"Saint Habib","03-28":"Saint Gontran","03-29":"Sainte Gwladys","03-30":"Saint Amédée","03-31":"Saint Benjamin",
+    "04-01":"Saint Hugues","04-02":"Sainte Sandrine","04-03":"Saint Richard","04-04":"Saint Isidore","04-05":"Saint Vincent Ferrier","04-06":"Saint Marcellin","04-07":"Saint Jean-Baptiste de la Salle","04-08":"Sainte Julie","04-09":"Saint Gautier","04-10":"Saint Fulbert","04-11":"Saint Stanislas","04-12":"Saint Jules","04-13":"Saint Martin I","04-14":"Saint Maxime","04-15":"Sainte Paterne","04-16":"Sainte Benoîte","04-17":"Saint Anicet","04-18":"Saint Parfait","04-19":"Sainte Emma","04-20":"Sainte Odette","04-21":"Saint Anselme","04-22":"Saint Alexandre","04-23":"Saint Georges","04-24":"Saint Fidèle","04-25":"Saint Marc","04-26":"Sainte Alida","04-27":"Sainte Zita","04-28":"Sainte Valérie","04-29":"Sainte Catherine de Sienne","04-30":"Saint Robert",
+    "05-01":"Saint Joseph artisan","05-02":"Saint Athanase","05-03":"Saints Philippe et Jacques","05-04":"Sainte Sylvie","05-05":"Sainte Judith","05-06":"Saint Prudence","05-07":"Sainte Gisèle","05-08":"Victoire 1945","05-09":"Saint Pacôme","05-10":"Sainte Solange","05-11":"Sainte Estelle","05-12":"Saints Nérée et Achillée","05-13":"Sainte Rolande","05-14":"Saint Matthias","05-15":"Saint Isidore","05-16":"Saint Honoré","05-17":"Saint Pascal","05-18":"Saint Éric","05-19":"Saint Yves","05-20":"Saint Bernardin","05-21":"Saint Constantin","05-22":"Sainte Rita","05-23":"Saint Didier","05-24":"Saint Donatien","05-25":"Saint Grégoire VII","05-26":"Saint Bérenger","05-27":"Saint Augustin de Cantorbéry","05-28":"Saint Germain","05-29":"Sainte Maximin","05-30":"Sainte Jeanne d'Arc","05-31":"Visitation",
+    "06-01":"Saint Justin","06-02":"Saints Marcellin et Pierre","06-03":"Sainte Clothilde","06-04":"Sainte Clotilde","06-05":"Saint Boniface","06-06":"Saint Norbert","06-07":"Saint Gilbert","06-08":"Saint Médard","06-09":"Saint Ephrem","06-10":"Saint Landry","06-11":"Saint Barnabé","06-12":"Saint Guy","06-13":"Saint Antoine de Padoue","06-14":"Saint Élisée","06-15":"Sainte Germaine","06-16":"Saint Régis","06-17":"Saint Hervé","06-18":"Saint Léonce","06-19":"Saint Romuald","06-20":"Saint Silverius","06-21":"Saint Rodolphe","06-22":"Saint Alban","06-23":"Sainte Audrey","06-24":"Saint Jean-Baptiste","06-25":"Saint Prosper","06-26":"Saints Jean et Paul","06-27":"Saint Fernand","06-28":"Saint Irénée","06-29":"Saints Pierre et Paul","06-30":"Saint Martial",
+    "07-01":"Saint Thierry","07-02":"Saint Martinien","07-03":"Saint Thomas","07-04":"Saint Florent","07-05":"Saint Antoine","07-06":"Sainte Mariette","07-07":"Saint Raoul","07-08":"Saint Thibaut","07-09":"Saint Augustin Zhao","07-10":"Saint Ulrich","07-11":"Saint Benoît","07-12":"Saint Olivier","07-13":"Saint Joël","07-14":"Fête Nationale","07-15":"Saint Donald","07-16":"Notre-Dame du Carmel","07-17":"Sainte Charlotte","07-18":"Saint Frédéric","07-19":"Saint Arsène","07-20":"Sainte Marina","07-21":"Saint Victor","07-22":"Sainte Marie-Madeleine","07-23":"Sainte Brigitte","07-24":"Sainte Christine","07-25":"Saint Jacques","07-26":"Saints Anne et Joachim","07-27":"Sainte Nathalie","07-28":"Saint Samson","07-29":"Sainte Marthe","07-30":"Sainte Juliette","07-31":"Saint Ignace de Loyola",
+    "08-01":"Saint Alphonse","08-02":"Saint Julien Eymard","08-03":"Sainte Lydie","08-04":"Saint Jean-Marie Vianney","08-05":"Dédicace S. Marie-Majeure","08-06":"Transfiguration","08-07":"Saint Gaétan","08-08":"Saint Dominique","08-09":"Saint Amour","08-10":"Saint Laurent","08-11":"Sainte Claire","08-12":"Sainte Clarisse","08-13":"Saints Pontien et Hippolyte","08-14":"Saint Eusèbe","08-15":"Assomption","08-16":"Saint Rock","08-17":"Sainte Hyacinthe","08-18":"Sainte Hélène","08-19":"Saint Jean-Eudes","08-20":"Saint Bernard","08-21":"Saint Pie X","08-22":"Sainte Fabrice","08-23":"Sainte Rose de Lima","08-24":"Saint Barthélemy","08-25":"Saint Louis","08-26":"Sainte Natacha","08-27":"Sainte Monique","08-28":"Saint Augustin","08-29":"Décollation de Jean-Baptiste","08-30":"Saint Fiacre","08-31":"Saint Aristide",
+    "09-01":"Saint Gilles","09-02":"Sainte Ingrid","09-03":"Saint Grégoire le Grand","09-04":"Sainte Rosalie","09-05":"Sainte Raïssa","09-06":"Saint Bertrand","09-07":"Sainte Reine","09-08":"Nativité de Marie","09-09":"Saint Alain","09-10":"Sainte Inès","09-11":"Saint Adelphe","09-12":"Saint Apollinaire","09-13":"Saint Jean Chrysostome","09-14":"Exaltation de la Croix","09-15":"Notre-Dame des Douleurs","09-16":"Saint Corneille","09-17":"Saint Robert Bellarmin","09-18":"Sainte Nadège","09-19":"Saint Janvier","09-20":"Saints André Kim","09-21":"Saint Matthieu","09-22":"Saint Maurice","09-23":"Saint Pio de Pietrelcina","09-24":"Sainte Thècle","09-25":"Saint Herman","09-26":"Saints Cosme et Damien","09-27":"Saint Vincent de Paul","09-28":"Saint Venceslas","09-29":"Saints Michel Gabriel Raphaël","09-30":"Saint Jérôme",
+    "10-01":"Sainte Thérèse de l'Enfant Jésus","10-02":"Saints Anges Gardiens","10-03":"Saint Gérard","10-04":"Saint François d'Assise","10-05":"Sainte Fleur","10-06":"Saint Bruno","10-07":"Notre-Dame du Rosaire","10-08":"Sainte Pélagie","10-09":"Saint Denis","10-10":"Saint Ghislain","10-11":"Saint Firmin","10-12":"Saint Wilfried","10-13":"Saint Géraud","10-14":"Saint Calliste","10-15":"Sainte Thérèse d'Avila","10-16":"Sainte Edwige","10-17":"Saint Ignace d'Antioche","10-18":"Saint Luc","10-19":"Saint René Goupil","10-20":"Sainte Adeline","10-21":"Sainte Céline","10-22":"Saint Élodie","10-23":"Saint Jean de Capistran","10-24":"Saint Magloire","10-25":"Saint Crépin","10-26":"Saint Dimitri","10-27":"Sainte Émeline","10-28":"Saints Simon et Jude","10-29":"Saint Narcisse","10-30":"Saint Bienvenu","10-31":"Saint Quentin",
+    "11-01":"La Toussaint","11-02":"Fête des morts","11-03":"Saint Hubert","11-04":"Saint Charles Borromée","11-05":"Sainte Sylvie","11-06":"Sainte Bertille","11-07":"Saint Carin","11-08":"Saint Geoffroy","11-09":"Saint Théodore","11-10":"Saint Léon le Grand","11-11":"Saint Martin de Tours","11-12":"Saint Josaphat","11-13":"Saint Brice","11-14":"Sainte Sidoine","11-15":"Saint Albert le Grand","11-16":"Sainte Marguerite d'Écosse","11-17":"Sainte Élisabeth de Hongrie","11-18":"Dédicace basiliques Pierre et Paul","11-19":"Saint Tanguy","11-20":"Saint Edmond","11-21":"Présentation de Marie","11-22":"Sainte Cécile","11-23":"Saint Clément","11-24":"Saints André Dung-Lac","11-25":"Sainte Catherine d'Alexandrie","11-26":"Sainte Delphine","11-27":"Saint Séverin","11-28":"Saint Jacques de la Marche","11-29":"Saint Saturnin","11-30":"Saint André",
+    "12-01":"Sainte Florence","12-02":"Sainte Viviane","12-03":"Saint François Xavier","12-04":"Sainte Barbara","12-05":"Saint Gérald","12-06":"Saint Nicolas","12-07":"Saint Ambroise","12-08":"Immaculée Conception","12-09":"Saint Pierre Fourier","12-10":"Saint Romaric","12-11":"Saint Daniel","12-12":"Sainte Jeanne de Chantal","12-13":"Sainte Lucie","12-14":"Saint Jean de la Croix","12-15":"Sainte Ninon","12-16":"Sainte Alice","12-17":"Saint Gaëtan","12-18":"Saint Gatien","12-19":"Saint Urbain","12-20":"Saint Abraham","12-21":"Saint Pierre Canisius","12-22":"Sainte Françoise-Xavière","12-23":"Saint Armand","12-24":"Sainte Adèle","12-25":"Noël","12-26":"Saint Étienne","12-27":"Saint Jean","12-28":"Saints Innocents","12-29":"Saint David","12-30":"Sainte Eugénie","12-31":"Saint Sylvestre"
+  };
+  function initFete() {
+    const now = new Date();
+    const key = `${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`;
+    document.getElementById('fete-name').textContent = FETES[key] ?? '—';
+  }
+
+  /* ── Météo ── */
+  async function fetchWeather() {
+    const city  = CITIES[cityIdx];
+    const badge = document.getElementById('w-badge');
+    badge.innerHTML = '<span class="spinner"></span> Chargement…';
+    const params = new URLSearchParams({
+      latitude:  city.lat,
+      longitude: city.lon,
+      /* `current` = valeurs temps réel mises à jour toutes les 15 min par Open-Meteo,
+         bien plus précis que hourly avec recherche d'index */
+      current:   'temperature_2m,relative_humidity_2m,apparent_temperature,precipitation_probability,weather_code',
+      daily:     'temperature_2m_max,temperature_2m_min,weather_code,precipitation_probability_max',
+      timezone:  city.tz,
+      forecast_days: '6'
+    });
+    try {
+      const res = await fetch(`https://api.open-meteo.com/v1/forecast?${params}`);
+      if (!res.ok) throw new Error(res.status);
+      wxCache = await res.json();
+      const t = new Date();
+      badge.textContent = '✓ À jour — ' + String(t.getHours()).padStart(2,'0') + ':' + String(t.getMinutes()).padStart(2,'0');
+      renderWeather();
+    } catch { badge.textContent = '⚠ Erreur réseau'; }
+  }
+
+  function renderWeather() {
+    if (!wxCache) return;
+    renderToday(wxCache);
+    const strip = document.getElementById('forecastStrip');
+    if (viewMode === 'forecast') { renderForecastStrip(wxCache); strip.style.display = 'flex'; }
+    else { strip.style.display = 'none'; }
+  }
+
+  function renderToday({ current: c, daily: d }) {
+    /* `current` contient les vraies valeurs instantanées — aucun calcul d'index nécessaire */
+    const info = wmo(c.weather_code);
+
+    document.getElementById('w-icon').textContent = info.i;
+    document.getElementById('w-cond').textContent = info.l;
+    document.getElementById('w-max').textContent  = Math.round(d.temperature_2m_max[0]) + '°';
+    document.getElementById('w-min').textContent  = Math.round(d.temperature_2m_min[0]) + '°';
+    document.getElementById('w-hum').textContent  = Math.round(c.relative_humidity_2m) + '%';
+    document.getElementById('w-feel').textContent = Math.round(c.apparent_temperature) + '°C';
+
+    const rain = c.precipitation_probability ?? d.precipitation_probability_max[0] ?? 0;
+    document.getElementById('w-rain').textContent  = rain + '%';
+    document.getElementById('rain-bar').style.width = rain + '%';
+  }
+
+  function renderForecastStrip({ daily: d }) {
+    const strip = document.getElementById('forecastStrip');
+    strip.innerHTML = '';
+    const DAYS = ['Dim','Lun','Mar','Mer','Jeu','Ven','Sam'];
+    const MON  = ['jan','fév','mar','avr','mai','juin','juil','août','sep','oct','nov','déc'];
+    for (let i = 1; i <= 5 && i < d.time.length; i++) {
+      const date = new Date(d.time[i] + 'T12:00:00');
+      const info = wmo(d.weather_code[i]);
+      const card = document.createElement('div');
+      card.className = 'fc-card';
+      card.innerHTML =
+        `<span class="fc-label">${DAYS[date.getDay()]}<span class="fc-date-sm">${date.getDate()} ${MON[date.getMonth()]}</span></span>` +
+        `<span class="fc-emoji">${info.i}</span>` +
+        `<span class="fc-tmax">${Math.round(d.temperature_2m_max[i])}°</span>` +
+        `<span class="fc-tmin">${Math.round(d.temperature_2m_min[i])}°</span>`;
+      strip.appendChild(card);
+    }
+  }
+
+  /* ── Boot ── */
+  buildCityList();
+  tick(); setInterval(tick, 1000);
+  initFete();
+  fetchWeather(); setInterval(fetchWeather, 15 * 60 * 1000);
+</script>
+</body>
+</html>
